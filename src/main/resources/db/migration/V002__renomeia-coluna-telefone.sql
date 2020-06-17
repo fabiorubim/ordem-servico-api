@@ -1,0 +1,1 @@
+ALTER TABLE ordemservico.cliente CHANGE telefone fone varchar(20) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL;
