@@ -15,12 +15,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.quarkup.ordem.servico.api.domain.model.Cliente;
 import br.com.quarkup.ordem.servico.api.domain.repository.ClienteRepository;
+import br.com.quarkup.ordem.servico.api.domain.service.CadastroClienteService;
 
 @RestController
 @RequestMapping("/clientes")
@@ -30,7 +30,11 @@ public class ClienteController {
     // private EntityManager manager;
 
     @Autowired
-    private ClienteRepository clienteRepository;
+    private ClienteRepository clienteRepository; //O professor diz que colocar tudo dentro da camada Service é opcional, 
+    //ele prefere deixar lá somente o que regra de negócio e que irá alterar o BD. Por isso as consultas ficam no Repository. Não existe um padrão.
+    
+    @Autowired
+    private CadastroClienteService cadastroCliente;
 
     // Utilizando Jakarta Persistence - JPA
     // @GetMapping("/clientes")
@@ -62,7 +66,8 @@ public class ClienteController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Cliente adicionar(@Valid @RequestBody Cliente cliente) {
-        return clienteRepository.save(cliente);
+        //return clienteRepository.save(cliente); //Não irá usar mais o repositório, e sim o Service
+        return cadastroCliente.salvar(cliente);
     }
 
     @PutMapping("/{clienteId}")
@@ -71,7 +76,8 @@ public class ClienteController {
             return ResponseEntity.notFound().build();
         }
         cliente.setId(clienteId);
-        cliente = clienteRepository.save(cliente);
+        //cliente = clienteRepository.save(cliente); //Não irá usar mais o repositório, e sim o Service
+        cadastroCliente.salvar(cliente);
         return ResponseEntity.ok(cliente);
     }
 
@@ -81,7 +87,8 @@ public class ClienteController {
             return ResponseEntity.notFound().build();
         }
 
-        clienteRepository.deleteById(clienteId);
+        //clienteRepository.deleteById(clienteId); //Não irá usar mais o repositório, e sim o Service
+        cadastroCliente.exluir(clienteId);
         return ResponseEntity.noContent().build();
     }
 
