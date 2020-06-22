@@ -1,8 +1,9 @@
 package br.com.quarkup.ordem.servico.api.domain.model;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -11,6 +12,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -21,9 +23,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
 import br.com.quarkup.ordem.servico.api.domain.ValidationGroups;
+import br.com.quarkup.ordem.servico.api.domain.exception.NegocioException;
+import br.com.quarkup.ordem.servico.api.model.Comentario;
 
 @Entity
 public class OrdemServico {
+    // As anotações de validação são redudantes aqui, já que a classe de representação recurso, a representation model, já faz isso.
+    // Escolhi deixar aqui como exemplo.
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,7 +40,7 @@ public class OrdemServico {
     @NotNull
     @ManyToOne
     private Cliente cliente;
-    
+
     @NotBlank
     private String descricao;
     private BigDecimal preco;
@@ -45,9 +51,12 @@ public class OrdemServico {
 
     @JsonProperty(access = Access.READ_ONLY)
     private OffsetDateTime dataAbertura;
-    
+
     @JsonProperty(access = Access.READ_ONLY)
     private OffsetDateTime dataFinalizacao;
+
+    @OneToMany(mappedBy = "ordemServico")
+    private List<Comentario> comentarios = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -105,6 +114,14 @@ public class OrdemServico {
         this.descricao = descricao;
     }
 
+    public List<Comentario> getComentarios() {
+        return comentarios;
+    }
+
+    public void setComentarios(List<Comentario> comentarios) {
+        this.comentarios = comentarios;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -128,6 +145,22 @@ public class OrdemServico {
         } else if (!id.equals(other.id))
             return false;
         return true;
+    }
+
+    public boolean podeSerFinalizada() {
+        return StatusOrdemServico.ABERTA.equals(getStatus());
+    }
+
+    public boolean naoPodeSerFinalizada() {
+        return !podeSerFinalizada();
+    }
+
+    public void finalizar() {
+        if (naoPodeSerFinalizada()) {
+            throw new NegocioException("Ordem de serviço não pode ser finalizada!");
+        }
+        setStatus(StatusOrdemServico.FINALIZADA);
+        setDataFinalizacao(OffsetDateTime.now());
     }
 
 }

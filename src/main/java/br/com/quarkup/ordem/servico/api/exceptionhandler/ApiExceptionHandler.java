@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import br.com.quarkup.ordem.servico.api.domain.exception.EntidadeNaoEncontradaException;
 import br.com.quarkup.ordem.servico.api.domain.exception.NegocioException;
 import br.com.quarkup.ordem.servico.api.exceptionhandler.Problema.Campo;
 
@@ -25,6 +26,18 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     
     @Autowired
     private MessageSource messageSource; //Carrega as mensagem do arquiv messages.properties
+    
+    @ExceptionHandler(EntidadeNaoEncontradaException.class)
+    public ResponseEntity<Object> handleEntidadeNaoEncontradaException(NegocioException ex, WebRequest request) {
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        Problema problema = new Problema();
+        
+        problema.setStatus(status.value());
+        problema.setTitulo(ex.getMessage());
+        problema.setDataHora(OffsetDateTime.now());  
+        
+        return handleExceptionInternal(ex, problema, new HttpHeaders(), status, request);
+    }
     
     @ExceptionHandler(NegocioException.class)
     public ResponseEntity<Object> handleNegocio(NegocioException ex, WebRequest request) {
